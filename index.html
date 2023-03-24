@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      crossorigin
+      src="https://unpkg.com/react@16/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+    ></script>
+    <title>Document</title>
+    <style>
+      .App {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      
+    ul li {
+      list-style: none;
+      margin: 20px 0;
+    }
+
+    button {
+      margin-right: 20px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="App">
+      <img src="assets/image/background.png" alt="" width="500" style="display: none;"/>
+      <canvas></canvas>
+      <ul>
+        <li>
+          <span>名言：</span>
+          <input type="text" class="content"/>
+        </li>
+
+        <li>
+          <span>作者：</span>
+          <input type="text" class="author" />
+        </li>
+
+        <li>
+          <button onClick="reset()" style="margin-left: 50px;">重置</button>
+          <button onClick="save()">保存</button>
+        </li>
+      </ul>
+    </div>
+  </body>
+  <script>
+    const canvas = document.getElementsByTagName('canvas')[0]
+    const content = document.getElementsByClassName('content')[0]
+    const author = document.getElementsByClassName('author')[0]
+    const ctx = canvas.getContext('2d')
+
+    const wrapText = (canvas, text, x, y, maxWidth, lineHeight) => {
+    if(typeof text !='string' || typeof x !='number' || typeof y !='number'){
+      return;
+    }
+    //如果最大宽度未定义 默认为300px
+    if(typeof maxWidth =='undefined'){
+      maxWidth = 300;
+    }
+    //如果行高未定义 则定义为检测画布文本的行高或html页面的默认行高
+    //window.getComptedStyle(Eelement) 传入节点返回节点对象
+    if(typeof lineHeight == 'undefined'){
+      lineHeight = (canvas.canvas && parseInt(window.getComputedStyle(canvas.canvas).lineHeight)) || parseInt(window.getComputedStyle(document.body).lineHeight)
+    }
+    let arrText = text.split('');
+    let line = '';
+    for (let n = 0; n < arrText.length; n++) {
+     //每个循环累加字符
+      let testLine = line + arrText[n];
+      //检测累加字符 获取累加字符的高度和宽度
+      let metrics = canvas.measureText(testLine);
+      let testWidth = metrics.width;
+      //如果累加字符的宽度大于定义的绘制文本最大宽度 则绘制累加字符的文本 并且设置换行间距再次进行绘制
+      if (testWidth > maxWidth && n > 0) {
+        canvas.fillText(line, x, y);
+        line = arrText[n];
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    canvas.fillText(line, x, y);
+  }
+
+    function draw() {
+      // debugger
+      const ratio = window.devicePixelRatio || 1
+      const w = 500
+      const h = 160
+
+      if (ctx) {
+        canvas.width = w * ratio // 实际渲染像素
+        canvas.height = h * ratio // 实际渲染像素
+        canvas.style.width = `${w}px` // 控制显示大小
+        canvas.style.height = `${h}px` // 控制显示大小
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
+      }
+
+      if (ctx) {
+        ctx.font = '20px 方正小标宋_GBK'
+        ctx.fillStyle = 'white'
+
+        const image = new Image(500, 160)
+        image.src = './assets/image/background.png'
+        image.onload = function () {
+          ctx.drawImage(this, 0, 0, 500, 160)
+        }
+      }
+    }
+
+    function drawText () {
+      clear().then(() => {
+          const measureText = ctx.measureText(author.value)
+          wrapText(ctx, content.value, 20, 40, 450, 30)
+  
+          const textWidth = measureText.width 
+          const start = canvas.width / window.devicePixelRatio
+          console.log(window.devicePixelRatio, start, textWidth)
+          ctx.fillText(author.value, start - textWidth - 20, 140)
+        })
+    }
+
+    author.oninput = (e) => {
+      console.log(e.target.value)
+      drawText()
+    }
+    content.oninput = (e) => {
+      console.log(e.target.value)
+      drawText()
+    }
+
+  
+
+    const clear = () => {
+      return new Promise(resolve => {
+       
+        const image = new Image(500, 160)
+        image.src = './assets/image/background.png'
+        image.onload = () => {
+          ctx.drawImage(image, 0, 0, 500, 160)
+          resolve(null)
+        }
+      })
+    }
+
+    const reset = () => {
+      content.value = ''
+        author.value = ''
+      clear().then(() => {})
+    }
+
+    const save = () => {
+      const a = document.createElement('a')
+
+      const url = canvas.toDataURL('image/png')
+      a.href = url
+      a.download = 'download.png'
+      a.click()
+    }
+
+    draw()
+
+  </script>
+</html>
