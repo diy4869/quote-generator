@@ -6,3 +6,5 @@
 - 输入作者 
 
 即可
+
+在线地址：https://diy4869.github.io/quote-generator/
